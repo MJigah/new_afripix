@@ -83,6 +83,7 @@ const DashboardScreen = () => {
   const submitHandler = (e) => {
     e.preventDefault();
     const formData = new FormData();
+    const navBar = document.getElementsByClassName('getNav');
     formData.append("myFile", image);
     formData.append("tags", tags);
     formData.append("orientation", orientation);
@@ -255,7 +256,7 @@ const DashboardScreen = () => {
                           Uploads
                         </button>
                         <button
-                          className="nav-link active"
+                          className="nav-link active getNav"
                           id="nav-profile-tab"
                           data-bs-toggle="tab"
                           data-bs-target="#nav-profile"
