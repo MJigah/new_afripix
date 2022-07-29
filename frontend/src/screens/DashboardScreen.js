@@ -1,29 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from 'react-toastify'
+import { toast } from "react-toastify";
 import Image from "../components/Image";
-import { getImages, upload } from "../features/image/imageSlice";
-// import { getUserDetails } from "../actions/userActions";
+import { upload } from "../features/image/imageSlice";
+import { getUserImages } from "../features/userImage/userImageSlice";
+import Spinner from '../components/Spinner'
 
 const DashboardScreen = () => {
   const [image, setImage] = useState(null);
   const [tags, setTags] = useState("");
   const [orientation, setOrientation] = useState("");
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { id } = useParams();
   const userId = id;
+
   const { user, isSuccess, isError, isLoading, message } = useSelector(
     (state) => state.auth
   );
-  const { images, isImageSuccess, isImageError, isImageLoading, imageMessage } = useSelector(
-    (state) => state.images
-  );
+
+  const { userImages, isUserImageSuccess, isUserImageError, isUserImageLoading, userImageMessage } =
+    useSelector((state) => state.userImages);
+
+  //================================================================
+  //Styles
   const navStyle = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: "30px"
   };
 
   const compStyle = {
@@ -34,6 +40,12 @@ const DashboardScreen = () => {
     alignItems: "right",
     justifyContent: "space-between",
   };
+  //================================================================
+
+
+  //================================================================
+  //Image Setup
+  
   var loadFile = (e) => {
     setImage(e.target.files[0]);
     var reader = new FileReader();
@@ -43,6 +55,11 @@ const DashboardScreen = () => {
     };
     reader.readAsDataURL(e.target.files[0]);
   };
+  //================================================================
+
+  //================================================================
+  //Get Time
+
   const today = new Date();
   const monthNames = [
     "January",
@@ -58,32 +75,35 @@ const DashboardScreen = () => {
     "November",
     "December",
   ];
+  let period;
   const date = `${
     monthNames[today.getMonth()]
   } ${today.getDate()}, ${today.getFullYear()}`;
   if (today.getHours() <= 11) {
-    var period = "Morning";
+    period = "Morning";
   } else if (today.getHours() <= 16) {
-    var period = "Afternoon";
+    period = "Afternoon";
   } else if (today.getHours() <= 19) {
-    var period = "Evening";
+    period = "Evening";
   } else {
-    var period = "Night";
+    period = "Night";
   }
+  //================================================================
   useEffect(() => {
-
     if (!user) {
-      // dispatch(getUserDetails(userId));
-      navigate('/')
+      navigate("/");
     }
 
-    dispatch(getImages({userId: userId}))
-  }, [user, dispatch, userId, navigate]);
+    if(!userImages){
+      dispatch(getUserImages(userId))
+    }
+
+  }, [user, dispatch, userId, navigate, userImages]);
 
   const submitHandler = (e) => {
     e.preventDefault();
     const formData = new FormData();
-    const navBar = document.getElementsByClassName('getNav');
+    const navBar = document.getElementsByClassName("getNav");
     formData.append("myFile", image);
     formData.append("tags", tags);
     formData.append("orientation", orientation);
@@ -176,8 +196,7 @@ const DashboardScreen = () => {
                       name="biodata"
                       placeholder="Biodata"
                       defaultValue={user ? user.biodata : null}
-                    >
-                    </textarea>
+                    ></textarea>
                   </div>
                   <div>
                     <button
@@ -236,7 +255,10 @@ const DashboardScreen = () => {
                   </div>
                 </div>
                 <div className="container" style={navStyle}>
-                  <div className="user-nav uk-width-1-3@m uk-first-column" style={{width: "100%"}}>
+                  <div
+                    className="user-nav uk-width-1-3@m uk-first-column"
+                    style={{ width: "100%" }}
+                  >
                     <nav style={navStyle}>
                       <div
                         className="nav nav-tabs text-center"
@@ -458,16 +480,18 @@ const DashboardScreen = () => {
                         id="nav-profile"
                         role="tabpanel"
                         aria-labelledby="nav-profile-tab"
-                        style={{width: "100%"}}
+                        style={{ width: "100%", marginBottom: "30px;"}}
                       >
-                        {user && user.images ? (
-                          <div className="image-container">
-                            {images.map((image) => (
-                              <Image key={image._id} image={image} />
-                            ))}
-                          </div>
-                        ) : (
-                          <h1>Favourite ...</h1>
+                        {isUserImageLoading ? <Spinner /> : (
+                          <div>{user && userImages ? (
+                            <div className="image-container">
+                              {userImages.map((image) => (
+                                <Image key={image._id} image={image} />
+                              ))}
+                            </div>
+                          ) : (
+                            <h1>Favourite ...</h1>
+                          )}</div>
                         )}
                       </div>
                       <div

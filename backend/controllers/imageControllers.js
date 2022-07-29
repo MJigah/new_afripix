@@ -9,7 +9,6 @@ const imageOrientation = require("../model/imageOrient");
 
 const imageUpload = asyncHandler(async (req, res, next) => {
   const { tags, orientation, user } = req.body;
-  console.log(`User ${user}`)
   const file = req.file;
   const splitTag = tags.split(",");
   const updatedTag = splitTag.map((eachTag) => {
@@ -70,7 +69,6 @@ const imageUpload = asyncHandler(async (req, res, next) => {
             error.message ||
             `Cannot Upload ${file.originalname} Something Missing`,
         });
-        console.log(error);
       });
   };
 
@@ -86,20 +84,22 @@ const imageUpload = asyncHandler(async (req, res, next) => {
 });
 
 const getImages = asyncHandler(async(req, res, next) => {
-  const {userId} = req.body;
-  const foundUser = await User.findById(userId).populate({
-    path: 'images',
-    model: 'Image',
-    populate: {
-      path: 'imageCategory',
-      model: 'Category',
-    }
-  })
+  const foundImage = await Image.find().populate('imageCategory').populate('userId')
+  if(!foundImage){
+    throw new Error("No User found!")
+  }
+  // console.log(foundImage)
+  res.status(201).json(foundImage);
+})
+
+//Fetch User Images
+const getUserImages = asyncHandler(async(req, res, next) => {
+  const foundUser = await User.findById(req.params.id).populate('images') 
   if(!foundUser){
     throw new Error("No User found!")
   }
 
-  res.status(201).json(foundUser.images);
+  res.status(201).json(foundUser.images)
 })
 
 ////////////////////////////////////////////////////////////////////////////
@@ -220,4 +220,5 @@ const addCategoryToImage = async (imageId, categories) => {
 module.exports = {
   imageUpload,
   getImages,
+  getUserImages,
 };

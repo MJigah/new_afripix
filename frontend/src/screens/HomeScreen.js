@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import data from "../data.js";
 import Image from "../components/Image.js";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getImages } from "../features/image/imageSlice.js";
+import Spinner from "../components/Spinner.jsx";
 
 const HomeScreen = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const newImages = (some) => {
     const sortedImage = data.images.sort((x, y) => {
       return y.visited - x.visited;
@@ -12,8 +16,16 @@ const HomeScreen = () => {
     return sortedImage;
   };
   const favImages = newImages();
-  const {user} = useSelector((state) => state.auth);
-  // const { error, loading, userInfo } = userRegister;
+  const { user } = useSelector((state) => state.auth);
+  const { images, isImageSuccess, isImageError, isImageLoading, imageMessage } =
+    useSelector((state) => state.images);
+
+  useEffect(() => {
+    if (images.length <= 0) {
+      dispatch(getImages());
+    }
+  }, [images, dispatch]);
+
   return (
     <div>
       <main className="page-main">
@@ -73,11 +85,15 @@ const HomeScreen = () => {
               <span>See the world from our lens</span>
               <h3 className="uk-h3">Popular Images</h3>
             </div>
-            <div className="image-container">
-              {data.images.map((image) => (
-                <Image key={image._id} image={image} />
-              ))}
-            </div>
+            {isImageLoading ? (
+              <Spinner />
+            ) : (
+              <div className="image-container">
+                {images.map((image) => (
+                  <Image key={image._id} image={image} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="section-featured">

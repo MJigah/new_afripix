@@ -55,27 +55,30 @@ const loginUser = asyncHandler(async(req, res) => {
     const { email, password } = req.body
 
     //Check for user email
-    const user = await User.findOne({email}).populate({
-        path: 'images',
-        model: 'Image',
-        populate: {
-            path: 'imageCategory',
-            model: 'Category'
+    const user = await User.findOne({email}).populate(
+        {
+            path: 'images', 
+            model: 'Image',
+            select: {'imageBase64': 1 }
         }
-    }).populate('imageCollections')
+    )
+    // .populate('images').populate('imageCollections')
+
+    // const user = await User.findOne({email})
 
     if(user && (await bcrypt.compare(password, user.password))){
-        res.json({
+        const foundUser = {
             _id: user._id,
             firstname: user.firstname,
             lastname: user.lastname,
             username: user.username,
             email: user.email,
             biodata: user.biodata,
-            images: user.images,
             imageCollections: user.imageCollections,
             token: generateToken(user._id)
-        })
+        }
+        
+        res.send(foundUser)
     } else {
         res.status(400)
         throw new Error('Invalid login details')

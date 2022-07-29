@@ -1,9 +1,11 @@
 const express = require('express')
-const { imageUpload, getImages } = require('../controllers/imageControllers')
+const { imageUpload, getImages, getUserImages } = require('../controllers/imageControllers')
 const store = require('../middleware/multer')
 const router = express.Router()
+const { protect } = require('../middleware/authMiddleware')
 
-router.post('/get', getImages)
-router.post('/', store.single('myFile'), imageUpload)
+router.get('/get', getImages)
+router.get('/:id', protect, getUserImages)
+router.post('/', protect, store.single('myFile'), imageUpload)
 
 module.exports = router

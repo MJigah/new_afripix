@@ -12,7 +12,8 @@ const initialState = {
 export const upload = createAsyncThunk(
     "image/upload", async(data, thunkAPI) => {
         try {
-            return await imageService.upload(data)
+            const token = thunkAPI.getState().auth.user.token;
+            return await imageService.upload(data, token)
         } catch (error) {
             const message =
           (error.response &&
@@ -27,10 +28,9 @@ export const upload = createAsyncThunk(
 )
 
 export const getImages = createAsyncThunk(
-    "image/getImages", async(data, thunkAPI) => {
+    "image/getImages", async(_, thunkAPI) => {
         try {
-            const token = thunkAPI.getState().auth.user.token;
-            return await imageService.getImages(data, token)
+            return await imageService.getImages()
         } catch (error) {
             const message =
           (error.response &&
@@ -62,7 +62,7 @@ export const imageSlice = createSlice({
         .addCase(upload.fulfilled, (state, action) => {
             state.isImageLoading = false
             state.isImageSuccess = true
-            state.images = state.goals.push(action.payload)
+            state.images = state.auth.user.images.push(action.payload)
         })
         .addCase(upload.rejected, (state, action) => {
             state.isImageLoading = false
