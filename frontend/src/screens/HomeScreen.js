@@ -1,12 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import data from "../data.js";
 import Image from "../components/Image.js";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getImages } from "../features/image/imageSlice.js";
 import Spinner from "../components/Spinner.jsx";
+import {
+  getCategoryImages,
+  searchReset,
+} from "../features/searchCateg/searchCategSlice.js";
+import { ReactSearchAutocomplete } from "react-search-autocomplete";
 
 const HomeScreen = () => {
+  const [showCategory, setShowCategory] = useState(false);
+  const iconStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  };
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const newImages = (some) => {
@@ -19,6 +30,31 @@ const HomeScreen = () => {
   const { user } = useSelector((state) => state.auth);
   const { images, isImageSuccess, isImageError, isImageLoading, imageMessage } =
     useSelector((state) => state.images);
+  const { category } = useSelector((state) => state.searchedCategory);
+  const { categories } = useSelector((state) => state.allCategories);
+
+  const handleOnSearch = (string, results) => {
+    // console.log(string, results);
+    console.log("searched!");
+  };
+
+  const handleOnHover = (result) => {
+    console.log(result);
+  };
+
+  const handleOnSelect = (item) => {
+    console.log(item);
+    dispatch(getCategoryImages(item._id));
+  };
+
+  const handleOnFocus = () => {
+    console.log("Focused");
+  };
+
+  const handleOnClear = () => {
+    dispatch(searchReset());
+    console.log("Cleared");
+  };
 
   useEffect(() => {
     if (images.length <= 0) {
@@ -29,11 +65,17 @@ const HomeScreen = () => {
   return (
     <div>
       <main className="page-main">
-        <div className="section-banner section-banner--home-2">
-          <div className="container-cover home-banner-container">
-            <div className="section-banner__bg home-banner">
-              <div className="uk-container">
-                <div className="section-banner__content uk-text-center">
+        <div className="section-banner section-banner--home-2 banner-container">
+          <div className="container-cover">
+              <div class="pic-wrapper">
+                <figure class="pic-1"></figure>
+                <figure class="pic-2"></figure>
+                <figure class="pic-3"></figure>
+                <figure class="pic-4"></figure>
+              </div>
+            <div className="section-banner__bg home-banner-container">
+              <div className="uk-container home-banner">
+                <div className="section-banner__content uk-text-center" style={{padding:"50% auto"}}>
                   <div className="section-banner__title">
                     Explore our great Images
                   </div>
@@ -41,21 +83,40 @@ const HomeScreen = () => {
                     "I don't trust words. I trust pictures." - Gilles Peress
                   </div>
                   <div className="section-banner__form">
-                    <form action="#!">
-                      <div className="form-search">
-                        <div className="form-search__box">
-                          <input type="text" placeholder="Find Anything ..." />
-                          <button
-                            className="uk-button uk-button-danger"
-                            type="submit"
-                          >
-                            SEARCH
-                          </button>
-                        </div>
-                      </div>
-                    </form>
+                    <div className=" home-search">
+                      <ReactSearchAutocomplete
+                        items={categories}
+                        fuseOptions={{ keys: ["name", "visits"] }} // Search on both fields
+                        resultStringKeyName="name" // String to display in the results
+                        onSearch={handleOnSearch}
+                        onHover={handleOnHover}
+                        onSelect={handleOnSelect}
+                        onFocus={handleOnFocus}
+                        onClear={handleOnClear}
+                        showIcon={true}
+                        placeholder="Find Anything..."
+                        styling={{
+                          height: "34px",
+                          border: "1px solid darkgreen",
+                          borderRadius: "4px",
+                          backgroundColor: "white",
+                          boxShadow: "none",
+                          hoverBackgroundColor: "grey",
+                          color: "black",
+                          fontSize: "12px",
+                          iconColor: "black",
+                          lineColor: "black",
+                          placeholderColor: "grey",
+                          clearIconMargin: "3px 8px 0 0",
+                          zIndex: 2,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="section-banner__bottom">
+                  <div
+                    className="section-banner__bottom"
+                    style={{ marginTop: "50px" }}
+                  >
                     <div className="popular-searches">
                       <span className="uk-margin-small-right">
                         What's Popular
@@ -81,18 +142,37 @@ const HomeScreen = () => {
         </div>
         <div className="section-popular">
           <div className="uk-section-large uk-container popular-style">
+            {category ? (
+              <div className="uk-text-center category-container">
+                <h2 className="uk-h3">{category.name}</h2>
+                <ul className="image-container">
+                  {category.imageId.map((image) => (
+                    <div key={image._id}>
+                      <Image image={image} user={user} />
+                    </div>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
             <div className="section-title uk-text-center">
               <span>See the world from our lens</span>
               <h3 className="uk-h3">Popular Images</h3>
             </div>
             {isImageLoading ? (
-              <Spinner />
+              <span
+                className="uk-text-center uk-icon uk-spinner"
+                style={iconStyle}
+                uk-spinner=""
+              ></span>
             ) : (
-              <div className="image-container">
+              <ul className="image-container">
                 {images.map((image) => (
-                  <Image key={image._id} image={image} />
+                  <div key={image._id}>
+                    <Image image={image} user={image.userId} />
+                  </div>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         </div>

@@ -2,6 +2,7 @@ const jwt  = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
 const User = require('../model/userModel')
 const bcrypt = require('bcryptjs')
+const userProf = require('../model/user-profile')
 
 // @desc POST user
 // @route POST /api/users
@@ -55,13 +56,7 @@ const loginUser = asyncHandler(async(req, res) => {
     const { email, password } = req.body
 
     //Check for user email
-    const user = await User.findOne({email}).populate(
-        {
-            path: 'images', 
-            model: 'Image',
-            select: {'imageBase64': 1 }
-        }
-    )
+    const user = await User.findOne({email})
     // .populate('images').populate('imageCollections')
 
     // const user = await User.findOne({email})
@@ -102,6 +97,20 @@ const getMe = asyncHandler(async(req, res) => {
     res.json("Found!")
 })
 
+const uploadProfile = asyncHandler(async(req, res) => {
+    const user = await User.findById(req.user._id)
+    const imageData = req.body.data
+    var baseImage = imageData.replace(/^data:image\/[a-z]+;base64,/, "");
+    var solution = imageData.split("base64,");
+    const contType = solution[0].split(":")
+    const strImage = solution[1]
+    const newContType = contType[1].slice(0, contType[1].length - 1)
+    const newProfile = await userProf.create({contentType: newContType, imageBase64: strImage, userId: user._id})
+    user.userProfile = newProfile._id;
+    user.save()
+    res.status(201).json(newProfile)
+})
+
 //Generate token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET || 'abc123', {
@@ -113,4 +122,5 @@ module.exports = {
     registerUser,
     loginUser,
     getMe,
+    uploadProfile,
 }

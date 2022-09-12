@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "./authService";
 
 const user = JSON.parse(localStorage.getItem("user"));
+const userProfile = JSON.parse(localStorage.getItem("userProfile"));
 
 const initialState = {
   user: user ? user : null,
@@ -9,6 +10,7 @@ const initialState = {
   isError: false,
   isSuccess: false,
   message: "",
+  userPd: userProfile? userProfile : null,
 };
 
 //Register User
@@ -45,6 +47,44 @@ export const login = createAsyncThunk("auth/login", async (user, thunkAPI) => {
     return thunkAPI.rejectWithValue(message);
   }
 });
+
+//User Image Upload
+export const upload = createAsyncThunk(
+  "image/upload", async(data, thunkAPI) => {
+      try {
+          const token = thunkAPI.getState().auth.user.token;
+          return await authService.upload(data, token)
+      } catch (error) {
+          const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+      }
+  }
+
+)
+
+//User profile image Upload
+export const profileUpload = createAsyncThunk(
+  "userPd/upload", async(data, thunkAPI) => {
+      try {
+          const token = thunkAPI.getState().auth.user.token;
+          return await authService.profileUpload(data, token)
+      } catch (error) {
+          const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+      }
+  }
+
+)
 
 export const authSlice = createSlice({
   name: "auth",
@@ -89,7 +129,20 @@ export const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
-      });
+      })
+      .addCase(profileUpload.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(profileUpload.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.userPd = action.payload;
+      })
+      .addCase(profileUpload.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
   },
 });
 

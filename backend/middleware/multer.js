@@ -1,4 +1,5 @@
 const multer = require("multer");
+let newName
 
 //set storage
 const storage = multer.diskStorage({
@@ -7,8 +8,7 @@ const storage = multer.diskStorage({
     },
     filename: function(req, file, cb){
         var ext = file.originalname.substr(file.originalname.lastIndexOf("."));
-
-        cb(null, "Afripixels"+ "-" + Date.now() + ext )
+        cb(null, "Afripixels"+ "-" + req.user.lastname + "-" + req.user.firstname + "-" + Date.now() + ext )
     }
 });
 

@@ -34,15 +34,7 @@ const imageUpload = asyncHandler(async (req, res, next) => {
     const foundUser = await checkLoggedUser(user);
 
     const finalimg = {
-      filename:
-        "afripixels" +
-        "-" +
-        foundUser.lastname +
-        "-" +
-        foundUser.firstname +
-        "-" +
-        Date.now() +
-        ext,
+      filename: file.filename,
       contentType: file.mimetype,
       imageBase64: encode_image,
       userId: foundUser._id,
@@ -51,12 +43,13 @@ const imageUpload = asyncHandler(async (req, res, next) => {
     const newImage = new Image(finalimg);
     return newImage
       .save()
-      .then( async(newlyCreatedImage) => {
-        await addCategoryToImage(newlyCreatedImage._id, updatedTag)
+      .then(async (newlyCreatedImage) => {
+        await addCategoryToImage(newlyCreatedImage._id, updatedTag);
+        await addOrientationToImage(newlyCreatedImage._id, orientation);
         await addImageToUser(user, newlyCreatedImage._id);
         await addImageToCategory(newlyCreatedImage._id, updatedTag);
         await addImageToOrientation(newlyCreatedImage._id, orientation);
-        return newlyCreatedImage._id
+        return newlyCreatedImage._id;
       })
       .catch((error) => {
         if (error.name === "MongoError" && error.code === 11000) {
@@ -76,30 +69,95 @@ const imageUpload = asyncHandler(async (req, res, next) => {
   allDone.then(async (done) => {
     const foundImage = await Image.findById(done);
     res.json(foundImage);
-  })
-  // let callItNow = function (callback) {
-  //   console.log("Successful!!");
-  // };
-  // callItNow(allDone);
+  });
 });
 
-const getImages = asyncHandler(async(req, res, next) => {
-  const foundImage = await Image.find().populate('imageCategory').populate('userId')
-  if(!foundImage){
-    throw new Error("No User found!")
+const getImages = asyncHandler(async (req, res, next) => {
+  const foundImage = await Image.find()
+    .populate("imageCategory")
+    .populate({
+      path: "userId",
+      select: { password: 0, isAdmin: 0 },
+    });
+  // const foundImage = await Image.find()
+  if (!foundImage) {
+    throw new Error("No User found!");
   }
   // console.log(foundImage)
   res.status(201).json(foundImage);
-})
+});
 
 //Fetch User Images
-const getUserImages = asyncHandler(async(req, res, next) => {
-  const foundUser = await User.findById(req.params.id).populate('images') 
-  if(!foundUser){
-    throw new Error("No User found!")
+const getUserImages = asyncHandler(async (req, res, next) => {
+  const foundUser = await User.findById(req.params.id).populate({
+    path: "images",
+    model: "Image",
+    populate: [
+      {
+        path: "imageCategory",
+      },
+      {
+        path: "imageOrientation",
+      },
+    ],
+  });
+
+  if (!foundUser) {
+    throw new Error("No User found!");
   }
 
-  res.status(201).json(foundUser.images)
+  res.status(201).json(foundUser.images);
+});
+
+//Fetch Selected Images
+const getSelectedImages = asyncHandler(async (req, res, next) => {
+  const singleImage = await Image.findById(req.params.id).populate([
+    {
+      path: "userId",
+      select: {
+        firstname: 1,
+        lastname: 1,
+        biodata: 1,
+        email: 1,
+        images: 1,
+        _id: 0,
+      },
+      populate: { path: "images", select: { imageBase64: 1, filename: 1 } },
+    },
+    {
+      path: "imageCategory",
+    },
+    {
+      path: "imageOrientation",
+    },
+  ]);
+
+  if (!singleImage) {
+    throw new Error("Image Not Found!");
+  }
+
+  res.status(201).json(singleImage);
+});
+
+//Fetch Related Images
+const getRelatedImages = asyncHandler(async(req, res, next) => {
+  //Fetch Image from :id
+  const foundImage = await Image.findById(req.params.id)
+
+  if(!foundImage) {
+    throw new Error("Image Not Found!")
+  }
+  //Fetch category Array from 
+  const prevImageCategory = foundImage.imageCategory
+  //Map category_images from category
+  const newImageCategory = prevImageCategory.map(async(categoryId) => {
+    const newCateg = await imageCategory.find({categoryId: categoryId}).populate('imageId')
+    return newCateg[0];
+  })
+
+  Promise.all(newImageCategory).then((results) => {
+    res.status(201).json(results);
+  });
 })
 
 ////////////////////////////////////////////////////////////////////////////
@@ -178,14 +236,14 @@ const addImageToOrientation = async (newImageId, orientation) => {
   const foundImageOrientation = await imageOrientation.findOne({
     name: orientation,
   });
+
+  if (!foundImageOrientation) {
+    throw new Error("Orientation not found!");
+  }
   const newImage = await Image.findById(newImageId);
 
   if (!newImage) {
     throw new Error("Image not found!");
-  }
-
-  if (!foundImageOrientation) {
-    throw new Error("Orientation not found!");
   }
 
   foundImageOrientation.imageId.push(newImage);
@@ -194,7 +252,6 @@ const addImageToOrientation = async (newImageId, orientation) => {
 
 const checkLoggedUser = async (user) => {
   const foundUser = await User.findById(user);
-  console.log(foundUser)
 
   if (!foundUser) {
     throw new Error("User not Found!");
@@ -205,13 +262,23 @@ const checkLoggedUser = async (user) => {
 
 const addCategoryToImage = async (imageId, categories) => {
   const findImage = await Image.findById(imageId);
+  if (!findImage) {
+    throw new Error("Image not found!");
+  }
   const newCategories = categories.map((category) => {
-    return Category.findOne({ name: category }, {_id: 1});
+    return Category.findOne({ name: category }, { _id: 1 });
   });
   Promise.all(newCategories).then((results) => {
     findImage.imageCategory = results;
-    findImage.save()
-  })
+    findImage.save();
+  });
+};
+
+const addOrientationToImage = async (imageId, orientation) => {
+  const findImage = await Image.findById(imageId);
+  const foundOrientation = await Orientation.findOne({ name: orientation });
+  findImage.imageOrientation = foundOrientation._id;
+  findImage.save();
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -221,4 +288,6 @@ module.exports = {
   imageUpload,
   getImages,
   getUserImages,
+  getSelectedImages,
+  getRelatedImages
 };

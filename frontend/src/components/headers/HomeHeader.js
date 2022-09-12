@@ -1,6 +1,7 @@
 import React from "react";
 
 const HomeHeader = () => {
+
   return (
     <>
       <header className="page-header">
@@ -15,7 +16,8 @@ const HomeHeader = () => {
                 </div>
                 <div className="page-header__search">
                   <form className="uk-search uk-search-default uk-width-1-1">
-                    <button
+                    
+                    {/* <button
                       className="uk-search-icon-flip"
                       data-uk-search-icon
                     ></button>
@@ -23,7 +25,7 @@ const HomeHeader = () => {
                       type="search"
                       className="uk-input uk-search-input"
                       placeholder="I'm looking for a..."
-                    />
+                    /> */}
                   </form>
                 </div>
               </div>

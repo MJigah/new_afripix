@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import imageService from "./imageService";
 
+
 const initialState = {
     images: [],
     isImageLoading: false,
@@ -8,24 +9,6 @@ const initialState = {
     isImageSuccess: false,
     imageMessage: ''   
 }
-
-export const upload = createAsyncThunk(
-    "image/upload", async(data, thunkAPI) => {
-        try {
-            const token = thunkAPI.getState().auth.user.token;
-            return await imageService.upload(data, token)
-        } catch (error) {
-            const message =
-          (error.response &&
-            error.response.data &&
-            error.response.data.message) ||
-          error.message ||
-          error.toString();
-        return thunkAPI.rejectWithValue(message);
-        }
-    }
-
-)
 
 export const getImages = createAsyncThunk(
     "image/getImages", async(_, thunkAPI) => {
@@ -56,20 +39,6 @@ export const imageSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-        .addCase(upload.pending, (state) => {
-            state.isImageLoading = true
-        })
-        .addCase(upload.fulfilled, (state, action) => {
-            state.isImageLoading = false
-            state.isImageSuccess = true
-            state.images = state.auth.user.images.push(action.payload)
-        })
-        .addCase(upload.rejected, (state, action) => {
-            state.isImageLoading = false
-            state.isImageError = true
-            state.imageMessage = action.payload
-            state.images = []
-        })
         .addCase(getImages.pending, (state) => {
             state.isImageLoading = true
         })

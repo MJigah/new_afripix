@@ -6,12 +6,12 @@ const colors = require('colors')
 connectDb()
 
 const app = express()
-
-app.use(express.json())
-app.use(express.urlencoded({ extended: false}))
+app.use(express.json({limit: '50mb'}))
+app.use(express.urlencoded({limit: '50mb', extended: true}))
 
 app.use('/api/users', require('./routes/userRoutes'))
 app.use('/api/images', require('./routes/imageRoutes'))
+app.use('/api/categories', require('./routes/categoryRoutes'))
 
 const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {

@@ -2,10 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Image from "../components/Image";
-import { upload } from "../features/image/imageSlice";
-import { getUserImages } from "../features/userImage/userImageSlice";
-import Spinner from '../components/Spinner'
+import DashImage from "../components/DashImage";
+import {
+  getUserImages,
+  reset,
+  upload,
+} from "../features/userImage/userImageSlice";
+import Avatar from "react-avatar-edit";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+// import img from "./blimg-6.jpg";
+import img from "./abstract-user-flat-4.svg";
+import { profileUpload } from "../features/auth/authSlice";
 
 const DashboardScreen = () => {
   const [image, setImage] = useState(null);
@@ -16,12 +25,24 @@ const DashboardScreen = () => {
   const { id } = useParams();
   const userId = id;
 
-  const { user, isSuccess, isError, isLoading, message } = useSelector(
+  const [imageCrop, setImageCrop] = useState(false);
+  const [profImage, setProfImage] = useState("");
+  const [src, setSrc] = useState(false);
+  const [profile, setProfile] = useState([]);
+  const [pview, setPview] = useState(false);
+  const [imageProfile, setImageProfile] = useState('')
+
+  const { user, isSuccess, isError, isLoading, message, userPd } = useSelector(
     (state) => state.auth
   );
 
-  const { userImages, isUserImageSuccess, isUserImageError, isUserImageLoading, userImageMessage } =
-    useSelector((state) => state.userImages);
+  const {
+    userImages,
+    isUserImageSuccess,
+    isUserImageError,
+    isUserImageLoading,
+    userImageMessage,
+  } = useSelector((state) => state.userImages);
 
   //================================================================
   //Styles
@@ -29,7 +50,13 @@ const DashboardScreen = () => {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: "30px"
+    marginBottom: "30px",
+  };
+
+  const iconStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   };
 
   const compStyle = {
@@ -42,10 +69,9 @@ const DashboardScreen = () => {
   };
   //================================================================
 
-
   //================================================================
   //Image Setup
-  
+
   var loadFile = (e) => {
     setImage(e.target.files[0]);
     var reader = new FileReader();
@@ -94,21 +120,78 @@ const DashboardScreen = () => {
       navigate("/");
     }
 
-    if(!userImages){
-      dispatch(getUserImages(userId))
+    if (!userImages) {
+      dispatch(getUserImages(userId));
     }
 
-  }, [user, dispatch, userId, navigate, userImages]);
+    // if (isUserImageSuccess) {
+    //   toast.success(userImageMessage);
+    // }
+
+    // if (isUserImageError) {
+    //   toast.error(userImageMessage);
+    // }
+
+    if(userPd){
+      setImageProfile(`data:${userPd.contentType};base64,${userPd.imageBase64}`)
+    }
+
+    // dispatch(reset());
+  }, [
+    user,
+    dispatch,
+    userId,
+    navigate,
+    userImages,
+    isUserImageSuccess,
+    isUserImageError,
+    userImageMessage,
+    imageProfile,
+    userPd
+  ]);
 
   const submitHandler = (e) => {
     e.preventDefault();
     const formData = new FormData();
-    const navBar = document.getElementsByClassName("getNav");
     formData.append("myFile", image);
     formData.append("tags", tags);
     formData.append("orientation", orientation);
     formData.append("user", userId);
     dispatch(upload(formData));
+    if (isUserImageSuccess) {
+      toast.success(userImageMessage);
+    }
+
+    if (isUserImageError) {
+      toast.error(userImageMessage);
+    }
+  };
+
+  //Profile picture handlers
+  const profileFinal = profile.map((item) => item.pview);
+
+  const onClose = () => {
+    setPview(null);
+    setImageCrop(false);
+  };
+
+  const onCrop = (view) => {
+    setPview(view);
+  };
+
+  const saveCropImage = () => {
+    setProfile([...profile, { pview }]);
+    setImageCrop(false);
+    const imageData ={data: pview}
+    console.log(imageData)
+    dispatch(profileUpload(imageData))
+  };
+
+  const onBeforeFileLoad = (elem) => {
+    if (elem.target.files[0].size > 71680000) {
+      alert("File is too big!");
+      elem.target.value = "";
+    }
   };
 
   return (
@@ -214,18 +297,20 @@ const DashboardScreen = () => {
       </div>
       <main className="page-main">
         <div className="page-content">
-          <div className="uk-section-large uk-container dashboard-banner">
-            <div className="uk-grid uk-grid-medium" data-uk-grid>
-              <div className="container">
+          <div style={{ margin: "50px 70px" }}>
+            <div>
+              <div className="">
                 <div
                   className="article-full__info dashboard-article uk-width-1-3@m"
                   style={compStyle}
                 >
                   <div className="article-full__author">
                     <span style={{ fontSize: "20px" }}>
-                      {`${period}, ${user ? user.firstname : null} ${
-                        user ? user.lastname : null
-                      }`}
+                      <h5>
+                        {" "}
+                        {period + ", "}{" "}
+                        {user ? user.firstname + " " + user.lastname : null}
+                      </h5>
                     </span>
                   </div>
                   <div className="">
@@ -239,26 +324,145 @@ const DashboardScreen = () => {
                 </div>
 
                 <div className="profile-container">
-                  <div>
-                    <div className="profile-display">
-                      {/* <img src="/images/blimg-6.jpg"/> */}
-                    </div>
-                    <span>
-                      <button
-                        className="uk-button uk-button-primary"
-                        id="modalBtn"
-                        type="button"
-                      >
-                        COMPLETE YOUR PROFILE
-                      </button>
-                    </span>
-                  </div>
-                </div>
-                <div className="container" style={navStyle}>
-                  <div
-                    className="user-nav uk-width-1-3@m uk-first-column"
-                    style={{ width: "100%" }}
+                  {/* Display Button trigger modal  */}
+                  <button
+                    type="button"
+                    class="btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#staticBackdrop"
                   >
+                    <img
+                      className="profile-display"
+                      src={userPd ? imageProfile : pview ? pview : img}
+                      alt={`${user.username} profile`}
+                      onClick={() => {
+                        setImageCrop(true);
+                      }}
+                    />{" "}
+                  </button>
+                  {/* Display Image Modal */}
+                  <div
+                    class="modal fade"
+                    id="staticBackdrop"
+                    data-bs-backdrop="static"
+                    data-bs-keyboard="false"
+                    tabindex="-1"
+                    aria-labelledby="staticBackdropLabel"
+                    aria-hidden="true"
+                  >
+                    <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="staticBackdropLabel">
+                            {userPd ? `Update` : `Upload`} Profile Picture
+                          </h5>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                          ></button>
+                        </div>
+                        <div class="modal-body">
+                          <div className="profile-style">
+                            <img
+                              className="profile-display"
+                              src={userPd ? imageProfile : pview ? pview : img}
+                              alt="Preview"
+                              onClick={() => {
+                                setImageCrop(true);
+                              }}
+                            />
+
+                            {imageCrop ? (
+                              <div>
+                                <Avatar
+                                  width={500}
+                                  height={600}
+                                  onCrop={onCrop}
+                                  onClose={onClose}
+                                  onBeforeFileLoad={onBeforeFileLoad}
+                                  src={null}
+                                />
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            onClick={saveCropImage}
+                            className="btn btn-primary profile-btn"
+                            data-bs-dismiss="modal"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* <div className="profile_img text-center p-4">
+                    <div className="flex flex-column justify-content align-items-center">
+                  <img
+                    className="profile-display"
+                    src={profileFinal.length ? profileFinal : img}
+                    alt="profile"
+                    onClick={() => {
+                      setImageCrop(true);
+                    }}
+                  />
+
+                  <div>
+                    <div>
+                      <Dialog
+                        visible={imageCrop}
+                        onHide={() => setImageCrop(false)}
+                      >
+                        <div className="confirmation-content flex flex-column align-items-center">
+                          <Avatar
+                            width={200}
+                            height={100}
+                            onCrop={onCrop}
+                            onClose={onClose}
+                            src={src}
+                            shadingColor={"#474649"}
+                            backgroundColor={"#474649"}
+                          />
+                        </div>
+
+                        <div className="flex flex-column align-items-center mt-5 w-12">
+                          <div className="flex justify-content-around w-12 mt-4">
+                            <Button
+                              onClick={saveCropImage}
+                              label="Save"
+                              icon="pi pi-check"
+                            />
+                          </div>
+                        </div>
+                      </Dialog>
+                    </div>
+
+                    <div>
+                      <InputText
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(event) => {
+                          const file = event.target.files[0];
+                          if (file && file.type.substring(0, 5) === "image") {
+                            setImage(file);
+                          } else {
+                            setImage(null);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                    </div>
+                  </div> */}
+                </div>
+                <div style={navStyle}>
+                  <div className="user-nav " style={{ width: "100%" }}>
                     <nav style={navStyle}>
                       <div
                         className="nav nav-tabs text-center"
@@ -287,7 +491,7 @@ const DashboardScreen = () => {
                           aria-controls="nav-profile"
                           aria-selected="true"
                         >
-                          Favourite
+                          Photos
                         </button>
                         <button
                           className="nav-link"
@@ -445,7 +649,7 @@ const DashboardScreen = () => {
                           <div className="image2-container" id="photos">
                             {/* <% for(var i = 0; i < Images.length; i++){ %>
                             <% if(Images[i].imageBase64){ %>
-                              <div className="modal fade" id="exampleModal<%=i%>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                              <div className="modal fade" id="exampleModal<%=i%>" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div className="modal-dialog">
                                   <div className="modal-content" id="modal-operate">
                                     <div className="modal-header">
@@ -480,18 +684,34 @@ const DashboardScreen = () => {
                         id="nav-profile"
                         role="tabpanel"
                         aria-labelledby="nav-profile-tab"
-                        style={{ width: "100%", marginBottom: "30px;"}}
+                        style={{ width: "100%", marginBottom: "30px" }}
                       >
-                        {isUserImageLoading ? <Spinner /> : (
-                          <div>{user && userImages ? (
-                            <div className="image-container">
-                              {userImages.map((image) => (
-                                <Image key={image._id} image={image} />
-                              ))}
-                            </div>
-                          ) : (
-                            <h1>Favourite ...</h1>
-                          )}</div>
+                        {" "}
+                        {isUserImageLoading ? (
+                          <span
+                            style={iconStyle}
+                            className="uk-icon uk-spinner"
+                            uk-spinner=""
+                          ></span>
+                        ) : (
+                          <div className="uk-position-relative">
+                            {user && userImages ? (
+                              <div
+                                className="image-container"
+                                data-uk-lightbox="animation: scale"
+                              >
+                                {userImages.map((image) => (
+                                  <DashImage
+                                    key={image._id}
+                                    image={image}
+                                    user={user}
+                                  />
+                                ))}
+                              </div>
+                            ) : (
+                              <p>No Images Uploaded</p>
+                            )}
+                          </div>
                         )}
                       </div>
                       <div

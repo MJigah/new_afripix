@@ -1,10 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import {
-  BrowserRouter,
-  Route,
-  Routes,
-  Link,
-} from "react-router-dom";
+import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
 // import { getUserDetails, signout } from "./actions/userActions";
 import AboutScreen from "./screens/AboutScreen";
 import ContactScreen from "./screens/ContactScreen";
@@ -14,16 +9,71 @@ import SigninScreen from "./screens/SigninScreen";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logout, reset } from "./features/auth/authSlice";
+import SelectedImage from "./screens/SelectedImage";
+import { ReactSearchAutocomplete } from "react-search-autocomplete";
+import { getCategory } from "./features/category/categorySlice";
+import { getCategoryImages, searchReset } from "./features/searchCateg/searchCategSlice";
+import { useEffect } from "react";
+import { useState } from "react";
+
 
 function App() {
   const { user } = useSelector((state) => state.auth);
+  const [catArray, setCatArray] = useState([])
   // const { error, loading, userInfo } = userSignin;
   // const { user } = userInfo;
   const dispatch = useDispatch();
+  const { categories } = useSelector((state) => state.allCategories)
+
+  useEffect(() => {
+    dispatch(getCategory())
+    setCatArray(categories)
+  }, [dispatch, categories])
+  
   const signoutHandler = () => {
     dispatch(logout());
     dispatch(reset());
   };
+
+  const handleOnSearch = (string, results) => {
+    // console.log(string, results);
+    console.log('searched!')
+  };
+
+  const handleOnHover = (result) => {
+    console.log(result);
+  };
+
+  const handleOnSelect = (item) => {
+    console.log(item);
+    dispatch(getCategoryImages(item._id))
+  };
+
+  const handleOnFocus = () => {
+    console.log("Focused");
+  };
+
+  const handleOnClear = () => {
+    dispatch(searchReset())
+    console.log("Cleared");
+  };
+
+  // const submitHandler = (e) => {
+  //   e.preventDefault()
+  //   console.log(e.target.value)
+  //   // dispatch(getCategoryImages())
+  // }
+
+  const formatResult = (item) => {
+    console.log(item);
+    return (
+      <div className="result-wrapper">
+        <span className="result-span">id: {item.id}</span>
+        <span className="result-span">name: {item.name}</span>
+      </div>
+    );
+  };
+
   return (
     <>
       <BrowserRouter>
@@ -31,7 +81,7 @@ function App() {
           <div
             className="page-header__scroll"
             data-uk-sticky
-            style={{ height: "110px" }}
+            style={{ height: "120px" }}
           >
             <div className="uk-container uk-container-xlarge">
               <div
@@ -41,21 +91,39 @@ function App() {
                 <div className="page-header__left">
                   <div className="page-header__logo logo">
                     <Link className="logo__link" to="/">
-                      <img src="/img/logo.svg" />
+                      <img src="/img/logo.svg" alt="logo" />
                     </Link>
                   </div>
                   <div className="page-header__search">
-                    <form className="uk-search uk-search-default uk-width-1-1">
-                      <button
-                        className="uk-search-icon-flip"
-                        data-uk-search-icon
-                      ></button>
-                      <input
-                        type="search"
-                        className="uk-input uk-search-input"
-                        placeholder="I'm looking for a..."
-                      />
-                    </form>
+                      <div style={{ width: 300, margin: 20 }}>
+                        <ReactSearchAutocomplete
+                          items={categories}
+                          fuseOptions={{ keys: ["name", "visits"] }} // Search on both fields
+                          resultStringKeyName="name" // String to display in the results
+                          onSearch={handleOnSearch}
+                          onHover={handleOnHover}
+                          onSelect={handleOnSelect}
+                          onFocus={handleOnFocus}
+                          onClear={handleOnClear}
+                          showIcon={true}
+                          styling={{
+                            height: "34px",
+                            border: "1px solid darkgreen",
+                            borderRadius: "4px",
+                            backgroundColor: "white",
+                            boxShadow: "none",
+                            hoverBackgroundColor: "grey",
+                            color: "black",
+                            fontSize: "12px",
+                            fontFamily: "Courier",
+                            iconColor: "black",
+                            lineColor: "black",
+                            placeholderColor: "grey",
+                            clearIconMargin: "3px 8px 0 0",
+                            zIndex: 2,
+                        }}
+                        />
+                      </div>
                   </div>
                 </div>
                 <div className="page-header__right">
@@ -114,30 +182,47 @@ function App() {
                             </ul>
                           </div>
                         </li>
+                        <li>
+                          {user && user.username ? (
+                            <>
+                              <Link to="#">
+                                {user.username}
+                                <span
+                                  className="uk-icon"
+                                  data-uk-icon="chevron-down"
+                                ></span>
+                              </Link>
+                              <div className="uk-navbar-dropdown">
+                                <ul className="uk-nav uk-navbar-dropdown-nav">
+                                  <li>
+                                    <Link to={"/"}>Home</Link>
+                                  </li>
+                                  <li>
+                                    <Link to={`/dashboard/${user._id}`}>
+                                      Profile
+                                    </Link>
+                                  </li>
+                                  <li>
+                                    <Link
+                                      to="#signout"
+                                      onClick={signoutHandler}
+                                    >
+                                      Sign out
+                                    </Link>
+                                  </li>
+                                </ul>
+                              </div>
+                            </>
+                          ) : (
+                            <Link className="sing-in" to="/signin">
+                              {" "}
+                              <i className="fas fa-sign-in-alt"></i>
+                              <span>Sign in or Register</span>
+                            </Link>
+                          )}
+                        </li>
                       </ul>
                     </nav>
-                  </div>
-                  <div className="page-header__sing-in">
-                    {user ? (
-                      <ul>
-                        <li>
-                          <Link to={`/dashboard/${user._id}`}>
-                            {user.email}
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="#signout" onClick={signoutHandler}>
-                            Sign out
-                          </Link>
-                        </li>
-                      </ul>
-                    ) : (
-                      <Link className="sing-in" to="/signin">
-                        {" "}
-                        <i className="fas fa-sign-in-alt"></i>
-                        <span>Sign in or Register</span>
-                      </Link>
-                    )}
                   </div>
                   <div className="page-header__btn-menu">
                     <Link
@@ -158,6 +243,7 @@ function App() {
             <Route path="/signin" element={<SigninScreen />}></Route>
             <Route path="/contact" element={<ContactScreen />}></Route>
             <Route path="/about" element={<AboutScreen />}></Route>
+            <Route path="/images/:imageid" element={<SelectedImage />}></Route>
             <Route path="/" element={<HomeScreen />} exact></Route>
           </Routes>
         </main>
