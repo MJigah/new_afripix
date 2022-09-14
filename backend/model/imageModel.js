@@ -25,6 +25,12 @@ const imageSchema = new mongoose.Schema(
         ref: "Category",
       },
     ],
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     imageOrientation: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Orientation",

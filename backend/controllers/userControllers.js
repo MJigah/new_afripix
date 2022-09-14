@@ -111,6 +111,49 @@ const uploadProfile = asyncHandler(async(req, res) => {
     res.status(201).json(newProfile)
 })
 
+const updateUser = asyncHandler(async(req, res) => {
+    const { firstname, lastname, username, biodata, email, password } = req.body
+
+    if(!firstname || !lastname || !username || !biodata || !email || !password){
+        res.status(400)
+        throw new Error('Please add all fields!')
+    }
+
+    //Check if user exists
+    const userExists = await User.findOne({email})
+
+    if(!userExists){
+       throw new Error('User does not exist')
+    }     res.status(400)
+    
+
+    //Hash Password
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
+
+    //Update
+    const user = await User.findByIdAndUpdate(req.params.id, {
+        firstname, lastname, username, biodata, email, password: hashedPassword
+    })
+
+
+    if(user){
+        res.status(201).json({
+            _id: user._id,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            username: user.username,
+            email: user.email,
+            biodata: user.biodata,
+            images: user.images,
+            imageCollections: user.imageCollections,
+            token: generateToken(user._id)
+        })
+    } else {
+        res.status(400)
+        throw new Error('Invalid user data')
+    }})
+
 //Generate token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET || 'abc123', {
@@ -123,4 +166,5 @@ module.exports = {
     loginUser,
     getMe,
     uploadProfile,
+    updateUser,
 }

@@ -7,13 +7,29 @@ const initialState = {
     isImageLoading: false,
     isImageError: false,
     isImageSuccess: false,
-    imageMessage: ''   
+    imageMessage: '   '
 }
 
 export const getImages = createAsyncThunk(
     "image/getImages", async(_, thunkAPI) => {
         try {
             return await imageService.getImages()
+        } catch (error) {
+            const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+        }
+    }
+)
+
+export const likeImages = createAsyncThunk(
+    "image/likeImages", async(data, thunkAPI) => {
+        try {
+            return await imageService.likeImage(data)
         } catch (error) {
             const message =
           (error.response &&
@@ -48,6 +64,20 @@ export const imageSlice = createSlice({
             state.images = action.payload
         })
         .addCase(getImages.rejected, (state, action) => {
+            state.isImageLoading = false
+            state.isImageError = true
+            state.imageMessage = action.payload
+            state.images = []
+        })
+        .addCase(likeImages.pending, (state) => {
+            state.isImageLoading = true
+        })
+        .addCase(likeImages.fulfilled, (state, action) => {
+            state.isImageLoading = false
+            state.isImageSuccess = true
+            state.images = state.images.map((image) => image._id === action.payload._id ? action.payload : image)
+        })
+        .addCase(likeImages.rejected, (state, action) => {
             state.isImageLoading = false
             state.isImageError = true
             state.imageMessage = action.payload

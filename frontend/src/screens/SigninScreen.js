@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login, register, signin } from "../features/auth/authSlice";
+import { login, register, reset } from "../features/auth/authSlice";
 import { toast } from 'react-toastify'
 
 const SigninScreen = () => {
@@ -20,6 +20,11 @@ const SigninScreen = () => {
   const { search } = useLocation();
   const redirect = search ? search.split("=")[1] : "";
   const navigate = useNavigate();
+  const iconStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  };
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -43,17 +48,23 @@ const SigninScreen = () => {
     const userDetails = { email: signinEmail, password: signinPassword };
     dispatch(login(userDetails));
   };
+
+
   useEffect(() => {
     if(isError){
       toast.error(message)
     }
 
-    if (user) {
-      navigate({ pathname: `/${redirect}` });
+    if (user || isSuccess) {
+      navigate(`/${redirect}`)
     }
-  }, [user, navigate, isError, message, redirect]);
+    dispatch(reset())
+  }, [user, navigate, isError, message, isSuccess, dispatch, redirect]);
+
+
 
   return (
+    <div>
     <div className="page-wrapper">
       <main className="page-main">
         <div className="section-banner">
@@ -231,6 +242,11 @@ const SigninScreen = () => {
                           placeholder="Password"
                         />
                       </div>
+                      {isLoading && (<span
+                className="uk-text-center uk-icon uk-spinner"
+                style={iconStyle}
+                uk-spinner=""
+              ></span>)}
                       {/* <div className="uk-margin-small">
                         <input
                           className="uk-input"
@@ -259,7 +275,7 @@ const SigninScreen = () => {
           </div>
         </div>
       </main>
-      )
+    </div>
     </div>
   );
 };

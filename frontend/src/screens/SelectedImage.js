@@ -55,6 +55,13 @@ const SelectedImage = () => {
           className="uk-section-large uk-container"
           style={{ paddingTop: "50px" }}
         >
+          {isSelectedLoading ? (
+            <span
+            className="uk-text-center uk-icon uk-spinner"
+            style={iconStyle}
+            uk-spinner=""
+          ></span>
+          ) : (
           <div className="uk-grid uk-grid-medium" data-uk-grid>
             <div className="uk-width-2-3@m">
               <article className="article-full">
@@ -397,6 +404,7 @@ const SelectedImage = () => {
               </aside>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

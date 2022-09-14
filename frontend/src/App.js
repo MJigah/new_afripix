@@ -12,24 +12,26 @@ import { logout, reset } from "./features/auth/authSlice";
 import SelectedImage from "./screens/SelectedImage";
 import { ReactSearchAutocomplete } from "react-search-autocomplete";
 import { getCategory } from "./features/category/categorySlice";
-import { getCategoryImages, searchReset } from "./features/searchCateg/searchCategSlice";
+import {
+  getCategoryImages,
+  searchReset,
+} from "./features/searchCateg/searchCategSlice";
 import { useEffect } from "react";
 import { useState } from "react";
 
-
 function App() {
   const { user } = useSelector((state) => state.auth);
-  const [catArray, setCatArray] = useState([])
+  const [catArray, setCatArray] = useState([]);
   // const { error, loading, userInfo } = userSignin;
   // const { user } = userInfo;
   const dispatch = useDispatch();
-  const { categories } = useSelector((state) => state.allCategories)
+  const { categories } = useSelector((state) => state.allCategories);
 
   useEffect(() => {
-    dispatch(getCategory())
-    setCatArray(categories)
-  }, [dispatch, categories])
-  
+    dispatch(getCategory());
+    setCatArray(categories);
+  }, [dispatch, categories]);
+
   const signoutHandler = () => {
     dispatch(logout());
     dispatch(reset());
@@ -37,7 +39,7 @@ function App() {
 
   const handleOnSearch = (string, results) => {
     // console.log(string, results);
-    console.log('searched!')
+    console.log("searched!");
   };
 
   const handleOnHover = (result) => {
@@ -46,7 +48,7 @@ function App() {
 
   const handleOnSelect = (item) => {
     console.log(item);
-    dispatch(getCategoryImages(item._id))
+    dispatch(getCategoryImages(item._id));
   };
 
   const handleOnFocus = () => {
@@ -54,7 +56,7 @@ function App() {
   };
 
   const handleOnClear = () => {
-    dispatch(searchReset())
+    dispatch(searchReset());
     console.log("Cleared");
   };
 
@@ -75,8 +77,10 @@ function App() {
   };
 
   return (
-    <>
+    <div>
+    <div>
       <BrowserRouter>
+      <div>
         <header className="page-header">
           <div
             className="page-header__scroll"
@@ -95,35 +99,35 @@ function App() {
                     </Link>
                   </div>
                   <div className="page-header__search">
-                      <div style={{ width: 300, margin: 20 }}>
-                        <ReactSearchAutocomplete
-                          items={categories}
-                          fuseOptions={{ keys: ["name", "visits"] }} // Search on both fields
-                          resultStringKeyName="name" // String to display in the results
-                          onSearch={handleOnSearch}
-                          onHover={handleOnHover}
-                          onSelect={handleOnSelect}
-                          onFocus={handleOnFocus}
-                          onClear={handleOnClear}
-                          showIcon={true}
-                          styling={{
-                            height: "34px",
-                            border: "1px solid darkgreen",
-                            borderRadius: "4px",
-                            backgroundColor: "white",
-                            boxShadow: "none",
-                            hoverBackgroundColor: "grey",
-                            color: "black",
-                            fontSize: "12px",
-                            fontFamily: "Courier",
-                            iconColor: "black",
-                            lineColor: "black",
-                            placeholderColor: "grey",
-                            clearIconMargin: "3px 8px 0 0",
-                            zIndex: 2,
+                    <div style={{ width: 300, margin: 20 }}>
+                      <ReactSearchAutocomplete
+                        items={categories}
+                        fuseOptions={{ keys: ["name", "visits"] }} // Search on both fields
+                        resultStringKeyName="name" // String to display in the results
+                        onSearch={handleOnSearch}
+                        onHover={handleOnHover}
+                        onSelect={handleOnSelect}
+                        onFocus={handleOnFocus}
+                        onClear={handleOnClear}
+                        showIcon={true}
+                        styling={{
+                          height: "34px",
+                          border: "1px solid darkgreen",
+                          borderRadius: "4px",
+                          backgroundColor: "white",
+                          boxShadow: "none",
+                          hoverBackgroundColor: "grey",
+                          color: "black",
+                          fontSize: "12px",
+                          fontFamily: "Courier",
+                          iconColor: "black",
+                          lineColor: "black",
+                          placeholderColor: "grey",
+                          clearIconMargin: "3px 8px 0 0",
+                          zIndex: 2,
                         }}
-                        />
-                      </div>
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="page-header__right">
@@ -158,7 +162,7 @@ function App() {
                         </div>
                       </li> */}
                         <li>
-                          <Link to="08_blog-grid.html">
+                          <Link to="/">
                             Pages
                             <span
                               className="uk-icon"
@@ -203,10 +207,7 @@ function App() {
                                     </Link>
                                   </li>
                                   <li>
-                                    <Link
-                                      to="#signout"
-                                      onClick={signoutHandler}
-                                    >
+                                    <Link to="#" onClick={signoutHandler}>
                                       Sign out
                                     </Link>
                                   </li>
@@ -237,15 +238,23 @@ function App() {
           </div>
         </header>
         <main>
+            <div>
           <Routes>
-            <Route path="/dashboard/:id" element={<DashboardScreen />}></Route>
-            <Route path="/dashboard" element={<DashboardScreen />}></Route>
-            <Route path="/signin" element={<SigninScreen />}></Route>
-            <Route path="/contact" element={<ContactScreen />}></Route>
-            <Route path="/about" element={<AboutScreen />}></Route>
-            <Route path="/images/:imageid" element={<SelectedImage />}></Route>
-            <Route path="/" element={<HomeScreen />} exact></Route>
+              <Route
+                path="/dashboard/:id"
+                element={<DashboardScreen />}
+              ></Route>
+              <Route path="/dashboard" element={<DashboardScreen />}></Route>
+              <Route path="/signin" element={<SigninScreen />}></Route>
+              <Route path="/contact" element={<ContactScreen />}></Route>
+              <Route path="/about" element={<AboutScreen />}></Route>
+              <Route
+                path="/images/:imageid"
+                element={<SelectedImage />}
+              ></Route>
+              <Route path="/" element={<HomeScreen />} exact></Route>
           </Routes>
+            </div>
         </main>
         <footer className="page-footer">
           <div className="page-footer__top">
@@ -539,9 +548,11 @@ function App() {
             </div>
           </div>
         </footer>
+      </div>
       </BrowserRouter>
       <ToastContainer />
-    </>
+    </div>
+    </div>
   );
 }
 

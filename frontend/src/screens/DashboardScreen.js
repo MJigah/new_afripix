@@ -9,14 +9,17 @@ import {
   upload,
 } from "../features/userImage/userImageSlice";
 import Avatar from "react-avatar-edit";
-import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
-import { InputText } from "primereact/inputtext";
-// import img from "./blimg-6.jpg";
 import img from "./abstract-user-flat-4.svg";
-import { profileUpload } from "../features/auth/authSlice";
+import { profileUpload, update } from "../features/auth/authSlice";
 
 const DashboardScreen = () => {
+  const [email, setEmail] = useState('')
+  const [firstname, setFirstName] = useState('')
+  const [lastname, setLastName] = useState('')
+  const [username, setUserName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [biodata, setBiodata] = useState('')
   const [image, setImage] = useState(null);
   const [tags, setTags] = useState("");
   const [orientation, setOrientation] = useState("");
@@ -116,26 +119,18 @@ const DashboardScreen = () => {
   }
   //================================================================
   useEffect(() => {
-    if (!user) {
-      navigate("/");
-    }
-
+    
     if (!userImages) {
       dispatch(getUserImages(userId));
     }
-
-    // if (isUserImageSuccess) {
-    //   toast.success(userImageMessage);
-    // }
-
-    // if (isUserImageError) {
-    //   toast.error(userImageMessage);
-    // }
-
+    
     if(userPd){
       setImageProfile(`data:${userPd.contentType};base64,${userPd.imageBase64}`)
     }
-
+    
+    if (!user) {
+      navigate("/");
+    }
     // dispatch(reset());
   }, [
     user,
@@ -149,6 +144,30 @@ const DashboardScreen = () => {
     imageProfile,
     userPd
   ]);
+
+  const formSubmitHandler = (e) => {
+    e.preventDefault();
+    if(password !== confirmPassword){
+      toast.error(`Passwords don't match`)
+    }
+    const userData ={
+      email: email === "" ? user.email : email,
+      firstname: firstname === "" ? user.firstname : firstname,
+      lastname: lastname === "" ? user.lastname : lastname,
+      username: username === "" ? user.username : username,
+      biodata: biodata === "" ? user.biodata : biodata,
+      password: password,
+    }
+    const userId = user._id
+    const sendData = {userId, userData};
+    //dispatch function
+    dispatch(update(sendData));
+    console.log(user)
+    if(isSuccess && message){
+      toast.success(message);
+    }
+    console.log(user)
+  }
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -196,7 +215,124 @@ const DashboardScreen = () => {
 
   return (
     <div className="page-wrapper">
-      <div id="simpleModal" className="modal">
+      <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        Complete Your Profile
+      </button>
+      <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div className="modal-dialog modal-lg">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title" id="exampleModalLabel">Complete your profile</h5>
+            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div className="modal-body">
+          <div>
+            <div
+              className="section-city-place widjet widjet-form"
+              id="add-reviews sign-in"
+            >
+              <form onSubmit={formSubmitHandler}>
+                <div
+                  className="uk-grid uk-grid-medium uk-child-width-1-1"
+                  data-uk-grid
+                >
+                  <div className="uk-grid uk-grid-small" data-uk-grid="true">
+                    <div className="uk-width-2-3@m uk-first-column">
+                      <input
+                        className="uk-input"
+                        id="email"
+                        type="email"
+                        name={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email"
+                        defaultValue={user ? user.email : null}
+                        required
+                      />
+                    </div>
+                    <div className="uk-width-1-3@m">
+                      <input
+                        className="uk-input uk-width-1-1"
+                        type="text"
+                        name={username}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Username"
+                        defaultValue={user ? user.username : null}
+                      />
+                    </div>
+                  </div>
+                  <div className="uk-grid uk-grid-small" data-uk-grid="true">
+                    <div className="uk-width-2-3@m uk-first-column">
+                      <input
+                        className="uk-input"
+                        type="text"
+                        name={firstname}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                        defaultValue={user ? user.firstname : null}
+                      />
+                    </div>
+                    <div className="uk-width-1-3@m">
+                      <input
+                        className="uk-input uk-width-1-1"
+                        type="text"
+                        name={lastname}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                        defaultValue={user ? user.lastname : null}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <input
+                      className="uk-input uk-margin-medium"
+                      type="password"
+                      name={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      className="uk-input uk-margin-medium"
+                      type="password"
+                      name={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm Password"
+                      required
+                    />
+                  </div>
+                  <div className="uk-margin">
+                    <textarea
+                      className="uk-textarea"
+                      rows="5"
+                      name={biodata}
+                      onChange={(e) => setBiodata(e.target.value)}
+                      placeholder="Biodata"
+                      defaultValue={user ? user.biodata : null}
+                    ></textarea>
+                  </div>
+                  <div>
+                    <button
+                      className="uk-button uk-button-danger uk-width-1-1"
+                      type="submit"
+                    >
+                      complete your profile
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      {/* <div className="modal fade" id="simpleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-content">
           <div className="modal-head">
             <h4>Complete your profile</h4>
@@ -294,7 +430,7 @@ const DashboardScreen = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       <main className="page-main">
         <div className="page-content">
           <div style={{ margin: "50px 70px" }}>
@@ -327,7 +463,7 @@ const DashboardScreen = () => {
                   {/* Display Button trigger modal  */}
                   <button
                     type="button"
-                    class="btn"
+                    className="btn"
                     data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop"
                   >
@@ -342,7 +478,7 @@ const DashboardScreen = () => {
                   </button>
                   {/* Display Image Modal */}
                   <div
-                    class="modal fade"
+                    className="modal fade"
                     id="staticBackdrop"
                     data-bs-backdrop="static"
                     data-bs-keyboard="false"
@@ -350,24 +486,24 @@ const DashboardScreen = () => {
                     aria-labelledby="staticBackdropLabel"
                     aria-hidden="true"
                   >
-                    <div class="modal-dialog modal-lg">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="staticBackdropLabel">
+                    <div className="modal-dialog modal-lg">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title" id="staticBackdropLabel">
                             {userPd ? `Update` : `Upload`} Profile Picture
                           </h5>
                           <button
                             type="button"
-                            class="btn-close"
+                            className="btn-close"
                             data-bs-dismiss="modal"
                             aria-label="Close"
                           ></button>
                         </div>
-                        <div class="modal-body">
+                        <div className="modal-body">
                           <div className="profile-style">
                             <img
                               className="profile-display"
-                              src={userPd ? imageProfile : pview ? pview : img}
+                              src={pview ? pview : imageProfile}
                               alt="Preview"
                               onClick={() => {
                                 setImageCrop(true);
@@ -388,7 +524,7 @@ const DashboardScreen = () => {
                             ) : null}
                           </div>
                         </div>
-                        <div class="modal-footer">
+                        <div className="modal-footer">
                           <button
                             onClick={saveCropImage}
                             className="btn btn-primary profile-btn"

@@ -14,6 +14,8 @@ const getCategories = asyncHandler(async(req, res) => {
 
 const getCategoryImages = asyncHandler(async(req, res) => {
     const foundCategory = await category.findById(req.params.id)
+    foundCategory.visits =+ 1;
+    foundCategory.save();
     if(!foundCategory){
         throw new Error('No Categories Found!')
     }

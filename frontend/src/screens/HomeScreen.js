@@ -10,6 +10,7 @@ import {
   searchReset,
 } from "../features/searchCateg/searchCategSlice.js";
 import { ReactSearchAutocomplete } from "react-search-autocomplete";
+import { reset } from "../features/auth/authSlice.js";
 
 const HomeScreen = () => {
   const [showCategory, setShowCategory] = useState(false);
@@ -57,12 +58,16 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
+    if(user){
+      dispatch(reset())
+    }
     if (images.length <= 0) {
       dispatch(getImages());
     }
-  }, [images, dispatch]);
+  }, [images, dispatch, user]);
 
   return (
+    <div>
     <div>
       <main className="page-main">
         <div className="section-banner section-banner--home-2 banner-container">
@@ -285,6 +290,7 @@ const HomeScreen = () => {
       <br />
       <br />
       <br />
+    </div>
     </div>
   );
 };

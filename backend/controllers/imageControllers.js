@@ -160,6 +160,21 @@ const getRelatedImages = asyncHandler(async(req, res, next) => {
   });
 })
 
+//Like Image
+const likeImage = asyncHandler(async(req, res, next) =>{
+  const { image, user} = req.body
+  //Get Image
+  const foundImage = await Image.findById(image)
+  //Get User
+  const foundUser = await User.findById(user)
+  //Add user to Image likes
+  foundImage.likes.push(foundUser._id);
+  foundImage.save()
+  //return response
+  res.status(201).json(foundImage);
+
+})
+
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
@@ -289,5 +304,6 @@ module.exports = {
   getImages,
   getUserImages,
   getSelectedImages,
-  getRelatedImages
+  getRelatedImages,
+  likeImage,
 };

@@ -35,6 +35,20 @@ const profileUpload = async (userData, token) => {
   return response.data;
 };
 
+const updateUser = async (data, token) => {
+  const {userData, userId} = data;
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+  const response = await axios.put(`${API_URL+userId}`, userData, config)
+  if (response.data) {
+    localStorage.setItem("user", JSON.stringify(response.data));
+  }
+  return response.data;
+}
+
 const logout = () => {
   localStorage.removeItem("user");
 };
@@ -44,6 +58,7 @@ const authService = {
   logout,
   login,
   profileUpload,
+  updateUser,
 };
 
 export default authService;
